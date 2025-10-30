@@ -18,10 +18,11 @@ iface eth2 inet static
   netmask 255.255.255.0
 
 # Gateway untuk jaringan Khamul & Elros
-auto eth3
-iface eth3 inet static
-  address 10.91.3.1
+auto eth0
+iface eth0 inet static
+  address 10.91.1.6
   netmask 255.255.255.0
+  gateway 10.91.1.1
 
 # Gateway untuk jaringan Database & DHCP Server
 auto eth4
@@ -58,7 +59,10 @@ iface eth0 inet static
   netmask 255.255.255.0
   gateway 10.91.1.1
 EOF
+
+cat <<EOF > /root/.bashrc
 echo "nameserver 192.168.122.1" > /etc/resolv.conf
+EOF
 
 #### === Isildur conf ===
 cat <<EOF > /etc/network/interfaces
@@ -68,7 +72,9 @@ iface eth0 inet static
   netmask 255.255.255.0
   gateway 10.91.1.1
 EOF
+cat <<EOF > /root/.bashrc
 echo "nameserver 192.168.122.1" > /etc/resolv.conf
+EOF
 
 #### === Anarion conf ===
 cat <<EOF > /etc/network/interfaces
@@ -78,7 +84,9 @@ iface eth0 inet static
   netmask 255.255.255.0
   gateway 10.91.1.1
 EOF
+cat <<EOF > /root/.bashrc
 echo "nameserver 192.168.122.1" > /etc/resolv.conf
+EOF
 
 #### === Miriel conf ===
 cat <<EOF > /etc/network/interfaces
@@ -88,8 +96,9 @@ iface eth0 inet static
   netmask 255.255.255.0
   gateway 10.91.1.1
 EOF
+cat <<EOF > /root/.bashrc
 echo "nameserver 192.168.122.1" > /etc/resolv.conf
-
+EOF
 #### === Elros conf ===
 cat <<EOF > /etc/network/interfaces
 auto eth0
@@ -98,7 +107,9 @@ iface eth0 inet static
   netmask 255.255.255.0
   gateway 10.91.3.1
 EOF
+cat <<EOF > /root/.bashrc
 echo "nameserver 192.168.122.1" > /etc/resolv.conf
+EOF
 
 #### === Erendis (DNS Master) conf ===
 cat <<EOF > /etc/network/interfaces
@@ -108,7 +119,9 @@ iface eth0 inet static
   netmask 255.255.255.0
   gateway 10.91.3.1
 EOF
+cat <<EOF > /root/.bashrc
 echo "nameserver 192.168.122.1" > /etc/resolv.conf
+EOF
 
 #### === Amdir (DNS Slave) conf ===
 cat <<EOF > /etc/network/interfaces
@@ -118,7 +131,9 @@ iface eth0 inet static
   netmask 255.255.255.0
   gateway 10.91.3.1
 EOF
+cat <<EOF > /root/.bashrc
 echo "nameserver 192.168.122.1" > /etc/resolv.conf
+EOF
 
 #### === Aldarion (DHCP Server) conf ===
 cat <<EOF > /etc/network/interfaces
@@ -128,7 +143,9 @@ iface eth0 inet static
   netmask 255.255.255.0
   gateway 10.91.4.1
 EOF
+cat <<EOF > /root/.bashrc
 echo "nameserver 192.168.122.1" > /etc/resolv.conf
+EOF
 
 #### === Palantir (DB Master) conf ===
 cat <<EOF > /etc/network/interfaces
@@ -138,7 +155,9 @@ iface eth0 inet static
   netmask 255.255.255.0
   gateway 10.91.4.1
 EOF
+cat <<EOF > /root/.bashrc
 echo "nameserver 192.168.122.1" > /etc/resolv.conf
+EOF
 
 #### === Narvi (DB Slave) conf ===
 cat <<EOF > /etc/network/interfaces
@@ -148,7 +167,9 @@ iface eth0 inet static
   netmask 255.255.255.0
   gateway 10.91.4.1
 EOF
+cat <<EOF > /root/.bashrc
 echo "nameserver 192.168.122.1" > /etc/resolv.conf
+EOF
 
 #### === Minastir conf ===
 cat <<EOF > /etc/network/interfaces
@@ -158,7 +179,9 @@ iface eth0 inet static
   netmask 255.255.255.0
   gateway 10.91.5.1
 EOF
+cat <<EOF > /root/.bashrc
 echo "nameserver 192.168.122.1" > /etc/resolv.conf
+EOF
 
 #### === Galadriel conf ===
 cat <<EOF > /etc/network/interfaces
@@ -168,7 +191,9 @@ iface eth0 inet static
   netmask 255.255.255.0
   gateway 10.91.2.1
 EOF
+cat <<EOF > /root/.bashrc
 echo "nameserver 192.168.122.1" > /etc/resolv.conf
+EOF
 
 #### === Celeborn conf ===
 cat <<EOF > /etc/network/interfaces
@@ -178,7 +203,9 @@ iface eth0 inet static
   netmask 255.255.255.0
   gateway 10.91.2.1
 EOF
+cat <<EOF > /root/.bashrc
 echo "nameserver 192.168.122.1" > /etc/resolv.conf
+EOF
 
 #### === Oropher conf ===
 cat <<EOF > /etc/network/interfaces
@@ -188,7 +215,9 @@ iface eth0 inet static
   netmask 255.255.255.0
   gateway 10.91.2.1
 EOF
+cat <<EOF > /root/.bashrc
 echo "nameserver 192.168.122.1" > /etc/resolv.conf
+EOF
 
 #### === Celebrimbor conf ===
 cat <<EOF > /etc/network/interfaces
@@ -198,7 +227,9 @@ iface eth0 inet static
   netmask 255.255.255.0
   gateway 10.91.2.1
 EOF
+cat <<EOF > /root/.bashrc
 echo "nameserver 192.168.122.1" > /etc/resolv.conf
+EOF
 
 #### === Pharazon conf ===
 cat <<EOF > /etc/network/interfaces
@@ -208,28 +239,48 @@ iface eth0 inet static
   netmask 255.255.255.0
   gateway 10.91.5.1
 EOF
+cat <<EOF > /root/.bashrc
 echo "nameserver 192.168.122.1" > /etc/resolv.conf
+EOF
 
-### === Node dengan IP Dinamis/Fixed ===
-# Node berikut akan dikonfigurasi untuk meminta IP dari DHCP server. Untuk sementara, resolv.conf mereka juga kita atur manual agar bisa instalasi.
+### === Node dengan IP Statis sementara ===
+# ini akan memberi mereka alamat IP, gateway, dan koneksi internet untuk sementara.
 
 #### === Gilgalad conf ===
 cat <<EOF > /etc/network/interfaces
 auto eth0
-iface eth0 inet dhcp
+iface eth0 inet static
+  address 10.91.2.7
+  netmask 255.255.255.0
+  gateway 10.91.2.1
 EOF
+
+cat <<EOF > /root/.bashrc
 echo "nameserver 192.168.122.1" > /etc/resolv.conf
+EOF
 
 #### === Amandil conf ===
 cat <<EOF > /etc/network/interfaces
 auto eth0
-iface eth0 inet dhcp
+iface eth0 inet static
+  address 10.91.1.7
+  netmask 255.255.255.0
+  gateway 10.91.1.1
 EOF
+
+cat <<EOF > /root/.bashrc
 echo "nameserver 192.168.122.1" > /etc/resolv.conf
+EOF
 
 #### === Khamul conf ===
 cat <<EOF > /etc/network/interfaces
 auto eth0
-iface eth0 inet dhcp
+iface eth0 inet static
+  address 10.91.3.4
+  netmask 255.255.255.0
+  gateway 10.91.3.1
 EOF
+
+cat <<EOF > /root/.bashrc
 echo "nameserver 192.168.122.1" > /etc/resolv.conf
+EOF
