@@ -40,8 +40,11 @@ EOF
 echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf
 sysctl -p
 
-# Restart service networking untuk menerapkan konfigurasi
-/etc/init.d/networking restart
+cat <<EOF > /root/.bashrc
+apt update
+apt install iptables -y
+iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE -s 10.91.0.0/16
+EOF
 
 
 ### === Node dengan IP Statis ===
@@ -56,7 +59,6 @@ iface eth0 inet static
   gateway 10.91.1.1
 EOF
 echo "nameserver 192.168.122.1" > /etc/resolv.conf
-/etc/init.d/networking restart
 
 #### === Isildur conf ===
 cat <<EOF > /etc/network/interfaces
@@ -67,7 +69,6 @@ iface eth0 inet static
   gateway 10.91.1.1
 EOF
 echo "nameserver 192.168.122.1" > /etc/resolv.conf
-/etc/init.d/networking restart
 
 #### === Anarion conf ===
 cat <<EOF > /etc/network/interfaces
@@ -78,7 +79,6 @@ iface eth0 inet static
   gateway 10.91.1.1
 EOF
 echo "nameserver 192.168.122.1" > /etc/resolv.conf
-/etc/init.d/networking restart
 
 #### === Miriel conf ===
 cat <<EOF > /etc/network/interfaces
@@ -89,7 +89,6 @@ iface eth0 inet static
   gateway 10.91.1.1
 EOF
 echo "nameserver 192.168.122.1" > /etc/resolv.conf
-/etc/init.d/networking restart
 
 #### === Elros conf ===
 cat <<EOF > /etc/network/interfaces
@@ -100,7 +99,6 @@ iface eth0 inet static
   gateway 10.91.3.1
 EOF
 echo "nameserver 192.168.122.1" > /etc/resolv.conf
-/etc/init.d/networking restart
 
 #### === Erendis (DNS Master) conf ===
 cat <<EOF > /etc/network/interfaces
@@ -111,7 +109,6 @@ iface eth0 inet static
   gateway 10.91.3.1
 EOF
 echo "nameserver 192.168.122.1" > /etc/resolv.conf
-/etc/init.d/networking restart
 
 #### === Amdir (DNS Slave) conf ===
 cat <<EOF > /etc/network/interfaces
@@ -122,7 +119,6 @@ iface eth0 inet static
   gateway 10.91.3.1
 EOF
 echo "nameserver 192.168.122.1" > /etc/resolv.conf
-/etc/init.d/networking restart
 
 #### === Aldarion (DHCP Server) conf ===
 cat <<EOF > /etc/network/interfaces
@@ -133,7 +129,6 @@ iface eth0 inet static
   gateway 10.91.4.1
 EOF
 echo "nameserver 192.168.122.1" > /etc/resolv.conf
-/etc/init.d/networking restart
 
 #### === Palantir (DB Master) conf ===
 cat <<EOF > /etc/network/interfaces
@@ -144,7 +139,6 @@ iface eth0 inet static
   gateway 10.91.4.1
 EOF
 echo "nameserver 192.168.122.1" > /etc/resolv.conf
-/etc/init.d/networking restart
 
 #### === Narvi (DB Slave) conf ===
 cat <<EOF > /etc/network/interfaces
@@ -155,7 +149,6 @@ iface eth0 inet static
   gateway 10.91.4.1
 EOF
 echo "nameserver 192.168.122.1" > /etc/resolv.conf
-/etc/init.d/networking restart
 
 #### === Minastir conf ===
 cat <<EOF > /etc/network/interfaces
@@ -166,7 +159,6 @@ iface eth0 inet static
   gateway 10.91.5.1
 EOF
 echo "nameserver 192.168.122.1" > /etc/resolv.conf
-/etc/init.d/networking restart
 
 #### === Galadriel conf ===
 cat <<EOF > /etc/network/interfaces
@@ -177,7 +169,6 @@ iface eth0 inet static
   gateway 10.91.2.1
 EOF
 echo "nameserver 192.168.122.1" > /etc/resolv.conf
-/etc/init.d/networking restart
 
 #### === Celeborn conf ===
 cat <<EOF > /etc/network/interfaces
@@ -188,7 +179,6 @@ iface eth0 inet static
   gateway 10.91.2.1
 EOF
 echo "nameserver 192.168.122.1" > /etc/resolv.conf
-/etc/init.d/networking restart
 
 #### === Oropher conf ===
 cat <<EOF > /etc/network/interfaces
@@ -199,7 +189,6 @@ iface eth0 inet static
   gateway 10.91.2.1
 EOF
 echo "nameserver 192.168.122.1" > /etc/resolv.conf
-/etc/init.d/networking restart
 
 #### === Celebrimbor conf ===
 cat <<EOF > /etc/network/interfaces
@@ -210,7 +199,6 @@ iface eth0 inet static
   gateway 10.91.2.1
 EOF
 echo "nameserver 192.168.122.1" > /etc/resolv.conf
-/etc/init.d/networking restart
 
 #### === Pharazon conf ===
 cat <<EOF > /etc/network/interfaces
@@ -221,7 +209,6 @@ iface eth0 inet static
   gateway 10.91.5.1
 EOF
 echo "nameserver 192.168.122.1" > /etc/resolv.conf
-/etc/init.d/networking restart
 
 ### === Node dengan IP Dinamis/Fixed ===
 # Node berikut akan dikonfigurasi untuk meminta IP dari DHCP server. Untuk sementara, resolv.conf mereka juga kita atur manual agar bisa instalasi.
@@ -232,7 +219,6 @@ auto eth0
 iface eth0 inet dhcp
 EOF
 echo "nameserver 192.168.122.1" > /etc/resolv.conf
-/etc/init.d/networking restart
 
 #### === Amandil conf ===
 cat <<EOF > /etc/network/interfaces
@@ -240,7 +226,6 @@ auto eth0
 iface eth0 inet dhcp
 EOF
 echo "nameserver 192.168.122.1" > /etc/resolv.conf
-/etc/init.d/networking restart
 
 #### === Khamul conf ===
 cat <<EOF > /etc/network/interfaces
@@ -248,4 +233,3 @@ auto eth0
 iface eth0 inet dhcp
 EOF
 echo "nameserver 192.168.122.1" > /etc/resolv.conf
-/etc/init.d/networking restart
