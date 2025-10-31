@@ -40,10 +40,12 @@ subnet 10.91.4.0 netmask 255.255.255.0 {
 
 # Konfigurasi IP tetap (Fixed Address) untuk Khamul
 host Khamul {
-  hardware ethernet 02:42:7d:47:03:00;
+  hardware ethernet 02:42:e8:63:34:00; 
   fixed-address 10.91.3.95;
 }
 EOF
+
+## hardware ethernet xx:xx:xx:xx:xx:xx; # GANTI dengan MAC Address Khamul jadi 02:42:e8:63:34:00
 
 # 4. Restart service DHCP untuk menerapkan konfigurasi
 service isc-dhcp-server restart
@@ -83,6 +85,6 @@ iface eth0 inet dhcp
 EOF
 
 #=============== validasi ============================
-# bisa "install DHCP client" dan "dhclient -v eth0" pada khamul, Amandil, dan Gilgalad
+# bisa ping google.com pada khamul, Amandil, dan Gilgalad
+ping google.com -c 2
 ip a
-dhclient -v eth0
