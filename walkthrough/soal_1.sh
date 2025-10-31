@@ -150,7 +150,7 @@ auto eth0
 iface eth0 inet static
   address 10.91.3.3
   netmask 255.255.255.0
-  gateway 10.91.4.1
+  gateway 10.91.3.1
 EOF
 
 # Aldarion
