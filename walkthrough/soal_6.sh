@@ -13,8 +13,8 @@ subnet 10.91.1.0 netmask 255.255.255.0 {
   range 10.91.1.68 10.91.1.94;
   option routers 10.91.1.1;
   option broadcast-address 10.91.1.255;
-  default-lease-time 1800; # Setengah jam
-  max-lease-time 3600;     # Satu jam
+  default-lease-time 1800; # <-- Setengah jam
+  max-lease-time 3600;     # <-- Satu jam
 }
 
 # Subnet untuk "Keluarga Peri"
@@ -23,11 +23,11 @@ subnet 10.91.2.0 netmask 255.255.255.0 {
   range 10.91.2.96 10.91.2.121;
   option routers 10.91.2.1;
   option broadcast-address 10.91.2.255;
-  default-lease-time 600;  # Seperenam jam
-  max-lease-time 3600;     # Satu jam
+  default-lease-time 600;  # <-- Seperenam jam
+  max-lease-time 3600;     # <-- Satu jam
 }
 
-# Subnet untuk Khamul (tidak perlu lease time spesifik)
+# Subnet untuk Khamul
 subnet 10.91.3.0 netmask 255.255.255.0 {
   option routers 10.91.3.1;
   option broadcast-address 10.91.3.255;
@@ -46,10 +46,3 @@ EOF
 
 # Restart service DHCP untuk menerapkan perubahan
 service isc-dhcp-server restart
-
-# =================================================================
-# Validasi di Klien (Amandil): Untuk memaksa Amandil meminta lease yang benar-benar baru (lengkap dengan lease time yang baru), ikuti langkah ini:
-
-# Restart penuh node Amandil dari antarmuka GNS3 (Stop, lalu Start).
-
-# Setelah Amandil menyala, buka konsolnya dan jalankan ip a. 

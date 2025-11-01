@@ -243,3 +243,45 @@ Setelah menjalankan skrip di **Erendis**, kita bisa langsung melakukan validasi 
 Semua validasi ini berhasil dilakukan dari klien, yang membuktikan bahwa konfigurasi telah berhasil diterapkan dan disalin ke *slave*.
 
 ![Validasi Lengkap dari Klien (Elendil)](assets/5_validasi_elendil.png)
+
+---
+
+## 📦 Soal 6: Konfigurasi DHCP Lease Time
+
+### **Soal 6: Penyampaian Ulang**
+> Aldarion menetapkan aturan waktu peminjaman tanah. Ia mengatur:
+> * Client Dinamis Keluarga Manusia dapat meminjam tanah selama **setengah jam**.
+> * Client Dinamis Keluarga Peri hanya **seperenam jam**.
+> * Batas waktu maksimal peminjaman untuk semua adalah **satu jam**.
+
+### **🎯 Maksud dari Soal No. 6**
+Tujuan dari soal ini adalah untuk mengatur **durasi peminjaman alamat IP** (*Lease Time*) yang dibagikan oleh server DHCP **Aldarion**. Kita perlu menetapkan durasi yang berbeda untuk subnet yang berbeda sesuai permintaan soal.
+
+* Setengah jam = 30 menit = **1800 detik**
+* Seperenam jam = 10 menit = **600 detik**
+* Satu jam = 60 menit = **3600 detik**
+
+Ini dilakukan untuk mengontrol seberapa lama sebuah klien dapat "memegang" sebuah alamat IP sebelum harus melapor kembali ke server untuk memperpanjangnya.
+
+### **🛠️ Cara Mengerjakan**
+Seluruh konfigurasi untuk soal ini hanya dilakukan di **Aldarion (DHCP Server)**.
+1.  Edit file konfigurasi `/etc/dhcp/dhcpd.conf`.
+2.  Di dalam blok `subnet 10.91.1.0` (Keluarga Manusia), tambahkan direktif `default-lease-time 1800;` dan `max-lease-time 3600;`.
+3.  Di dalam blok `subnet 10.91.2.0` (Keluarga Peri), tambahkan direktif `default-lease-time 600;` dan `max-lease-time 3600;`.
+4.  Pastikan tidak ada *syntax error* akibat kesalahan salin-tempel (masalah yang sering terjadi sebelumnya).
+5.  Restart *service* `isc-dhcp-server` untuk menerapkan semua perubahan konfigurasi.
+
+![Konfigurasi Lease Time di Aldarion](assets/6_dhcp_lease_time_aldarion.png)
+
+### **✅ Cara Melakukan Validasi**
+1.  **Validasi Server**: Di **Aldarion**, jalankan `service isc-dhcp-server status` untuk memastikan *service* `dhcpd is running`. Ini membuktikan bahwa file konfigurasi baru kita valid dan telah berhasil dimuat.
+2.  **Validasi Klien (Keluarga Manusia)**:
+    * **Restart penuh node Amandil** dari antarmuka GNS3 (**Stop**, lalu **Start**).
+    * Saat node *booting*, perhatikan log `udhcpc`. Log harus menunjukkan `lease time 1800`.
+3.  **Validasi Klien (Keluarga Peri)**:
+    * **Restart penuh node Gilgalad** dari GNS3.
+    * Saat node *booting*, log `udhcpc` harus menunjukkan `lease time 600`.
+
+Hasil validasi di Amandil menunjukkan *lease time* yang benar, yaitu 1800 detik, yang membuktikan bahwa konfigurasi telah berhasil diterapkan.
+
+![Validasi Lease Time di Amandil](assets/6_lease_time_amandil.png)
