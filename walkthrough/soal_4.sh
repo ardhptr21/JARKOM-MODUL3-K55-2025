@@ -134,3 +134,12 @@ EOF
 # Restart service DHCP
 service isc-dhcp-server restart
 
+# Di Semua Klien Statis (Elendil, Isildur, Miriel, elros, Galadriel, Celeborn, Oropher, celebrimbor, pharazon, palantir, narvi, minastir):
+# Hapus konfigurasi DNS yang lama dari .bashrc
+sed -i '/nameserver/d' /root/.bashrc
+
+# Tambahkan konfigurasi DNS yang baru (menunjuk ke Erendis & Amdir)
+echo 'echo -e "nameserver 10.91.3.2\nnameserver 10.91.3.3" > /etc/resolv.conf' >> /root/.bashrc
+
+# Terapkan perubahan sekarang
+source /root/.bashrc

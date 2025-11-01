@@ -1,43 +1,11 @@
-# === Minastir (DNS Forwarder) ===
-
-# 1. Install paket BIND9
-apt-get update
-apt-get install -y bind9
-
-# 2. Konfigurasi BIND9 untuk menjadi DNS Forwarder
-cat <<EOF > /etc/bind/named.conf.options
-options {
-        directory "/var/cache/bind";
-
-        # Memberitahu BIND9 untuk mendengarkan di semua interface, bukan hanya localhost
-        listen-on { any; };
-        listen-on-v6 { any; };
-
-        # Mengizinkan query dari localhost dan seluruh jaringan internal 10.91.x.x
-        allow-query { localhost; 10.91.0.0/16; };
-
-        # Mengizinkan proses forwarding untuk localhost dan seluruh jaringan internal
-        allow-recursion { localhost; 10.91.0.0/16; };
-
-        # Konfigurasi forwarding ke DNS server GNS3
-        forwarders {
-                192.168.122.1;
-        };
-        forward only;
-};
-EOF
-
-# 3. Pastikan resolver Minastir sendiri tidak menyebabkan loop
-echo "nameserver 192.168.122.1" > /etc/resolv.conf
-
-# 4. Restart service named untuk menerapkan konfigurasi
-service named restart
-
-# ==========================  Aldarion (DHCP Server) =========================
+# ==== ALDARION: Perbaikan Final dan Bersih untuk dhcpd.conf ====
 
 cat <<EOF > /etc/dhcp/dhcpd.conf
 # Jadikan server ini sebagai satu-satunya sumber DHCP yang sah
 authoritative;
+
+# Opsi global untuk semua klien: arahkan DNS ke Minastir
+option domain-name-servers 10.91.5.2;
 
 # Subnet untuk "Keluarga Manusia"
 subnet 10.91.1.0 netmask 255.255.255.0 {
@@ -72,8 +40,30 @@ host Khamul {
 }
 EOF
 
-# Restart service DHCP untuk menerapkan perubahan
+# Restart service DHCP. Kali ini seharusnya bersih.
 service isc-dhcp-server restart
+
+# ==== MINASTIR: Konfigurasi Final BIND9 ====
+apt-get update && apt-get install -y bind9
+
+cat <<EOF > /etc/bind/named.conf.options
+options {
+    directory "/var/cache/bind";
+    listen-on { any; };
+    listen-on-v6 { any; };
+    allow-query { any; };
+    allow-recursion { localhost; 10.91.0.0/16; };
+
+    forwarders {
+        192.168.122.1;
+    };
+    forward only;
+};
+EOF
+
+echo "nameserver 192.168.122.1" > /etc/resolv.conf
+service named restart
+
 
 # ==== SEMUA NODE (KECUALI DURIN & MINASTIR): Arahkan DNS ke Minastir ====
 # Jalankan di: Aldarion, Erendis, Amdir, Palantir, Narvi, Elros, Pharazon,
@@ -83,16 +73,14 @@ service isc-dhcp-server restart
 # Mengatur DNS resolver agar menunjuk ke Minastir
 echo "nameserver 10.91.5.2" > /etc/resolv.conf
 
-# ingat jangan lupa di restart dlu node-nodenya
-
 # Di Klien Dinamis (Khamul, Amandil, dan Gilgalad)
 
 # Jalankan perintah ini di Khamul, Amandil, dan Gilgalad. 
 # Perintah ini akan mencari baris yang mengandung "nameserver" di dalam file .bashrc dan menghapusnya secara otomatis.
 
 # Menghapus baris konfigurasi DNS yang lama dari .bashrc
-sed -i '/nameserver/d' /root/.bashrc
+sed -i '/nameserver/d' /root/.bashrc #untuk dijalankan perintah ini di Khamul, Amandil, dan Gilgalad
 
 # Pastikan Aldarion dan Minastir sudah berjalan dengan konfigurasi terakhir yang benar (dari jawaban sebelumnya).
 
-# Restart penuh node Khamul dari GNS3 (Stop, lalu Start). Ini sangat penting. Lalu jalankan cat /etc/resolv.conf outputnya pasti akan secara otomatis menunjukkan nameserver 10.91.5.2.
+# Restart penuh node Khamul,Amandil, dan Gilgalad dari GNS3 (Stop, lalu Start). Ini sangat penting. Lalu jalankan cat /etc/resolv.conf outputnya pasti akan secara otomatis menunjukkan nameserver 10.91.5.2.

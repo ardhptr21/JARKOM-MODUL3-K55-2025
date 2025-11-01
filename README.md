@@ -138,3 +138,108 @@ Artinya, semua node lain (klien statis dan dinamis) yang ingin mengetahui alamat
 
     ![Hasil Validasi Klien Dinamis (Khamul)](assets/3_test_ping_and_IP_khamul.png)
 
+---
+
+## 📦 Soal 4: DNS Master-Slave (Erendis & Amdir)
+
+### **Soal 4: Penyampaian Ulang**
+> Ratu Erendis, sang pembuat peta, menetapkan nama resmi untuk wilayah utama (`K55.com`). Ia menunjuk dirinya (`ns1.K55.com`) dan muridnya Amdir (`ns2.K55.com`) sebagai penjaga peta resmi. Setiap lokasi penting (Palantir, Elros, Pharazon, Elendil, Isildur, Anarion, Galadriel, Celeborn, Oropher) diberikan nama domain unik yang menunjuk ke lokasi fisik tanah mereka. Pastikan Amdir selalu menyalin peta (*master-slave*) dari Erendis dengan setia.
+
+### **🎯 Maksud dari Soal No. 4**
+Tujuan dari soal ini adalah membangun sistem DNS internal kita sendiri untuk mengelola domain `K55.com`. Ini menggantikan peran Minastir sebagai *forwarder* sederhana.
+1.  **Erendis sebagai DNS Master Server**: Erendis dikonfigurasi sebagai sumber utama ("master") yang menyimpan *database* (disebut *zone file*) yang memetakan semua nama domain (`elros.K55.com`) ke alamat IP (`10.91.1.6`).
+2.  **Amdir sebagai DNS Slave Server**: Amdir dikonfigurasi sebagai server cadangan ("slave"). Ia akan secara otomatis menyalin seluruh *database* dari Erendis. Ini adalah mekanisme replikasi yang penting untuk ketersediaan layanan (jika Erendis mati, Amdir bisa mengambil alih).
+3.  **Pembaruan Klien**: Semua node di jaringan (baik statis maupun dinamis) harus diperbarui agar tidak lagi bertanya ke Minastir, melainkan bertanya ke Erendis (`10.91.3.2`) dan Amdir (`10.91.3.3`).
+
+### **🛠️ Cara Mengerjakan**
+1.  **Konfigurasi Erendis (Master)**:
+    * Install `bind9`.
+    * Edit file `/etc/bind/named.conf.options` untuk mengizinkan *query*, *recursion*, dan `allow-transfer` ke Amdir.
+    * Edit file `/etc/bind/named.conf.local` untuk mendeklarasikan *zone* `K55.com` sebagai `type master`.
+    * Buat file *zone* `/etc/bind/jarkom/K55.com` yang berisi semua *record* SOA, NS, dan A untuk semua *host* yang diminta.
+    * Restart *service* `named`.
+
+    ![Konfigurasi Erendis (Master)](assets/4_konfig_erendis.png)
+
+2.  **Konfigurasi Amdir (Slave)**:
+    * Install `bind9`.
+    * Edit file `/etc/bind/named.conf.options` untuk mengizinkan *query* dan *recursion*.
+    * Edit file `/etc/bind/named.conf.local` untuk mendeklarasikan *zone* `K55.com` sebagai `type slave`, menunjuk ke `masters { 10.91.3.2; }` (IP Erendis).
+    * Restart *service* `named`.
+
+    ![Konfigurasi Amdir (Slave)](assets/4_konfig_amdir.png)
+
+3.  **Konfigurasi Ulang Klien Dinamis**:
+    * Edit file `/etc/dhcp/dhcpd.conf` di **Aldarion**.
+    * Ubah baris `option domain-name-servers` agar sekarang berisi IP Erendis dan Amdir (`10.91.3.2, 10.91.3.3`).
+    * Restart *service* `isc-dhcp-server`.
+
+    ![Pembaruan DNS Server di Aldarion (DHCP)](assets/4_perbarui_dns%20server_aldarion.png)
+
+4.  **Konfigurasi Ulang Klien Statis**:
+    * Di semua node statis (Elendil, Minastir, Palantir, dll.), edit file `/root/.bashrc`.
+    * Hapus baris lama yang menunjuk ke Minastir.
+    * Tambahkan baris baru: `echo -e "nameserver 10.91.3.2\nnameserver 10.91.3.3" > /etc/resolv.conf`.
+    * Jalankan `source /root/.bashrc` untuk menerapkan perubahan.
+
+### **✅ Cara Melakukan Validasi**
+1.  **Validasi Replikasi (di Amdir)**:
+    * Jalankan `ls -l /var/lib/bind/` di Amdir. Pastikan file `K55.com` telah berhasil dibuat. Ini membuktikan *zone transfer* dari Erendis berhasil.
+    * (Dapat dilihat pada gambar konfigurasi Amdir di atas)
+
+2.  **Validasi Klien Statis (di Elendil)**:
+    * Jalankan `cat /etc/resolv.conf` untuk memastikan *nameserver* telah menunjuk ke Erendis dan Amdir.
+    * Tes resolusi internal: `host elros.K55.com`. Pastikan hasilnya adalah `10.91.1.6`.
+    * Tes resolusi eksternal: `ping google.com -c 2`. Pastikan *forwarding* masih berfungsi.
+
+    ![Validasi Klien Statis (Elendil)](assets/4_validation_host_from_elendil.png)
+
+3.  **Validasi Klien Dinamis (di Khamul)**:
+    * **Restart penuh node Khamul** dari GNS3 (Stop, lalu Start).
+    * Jalankan `cat /etc/resolv.conf`. Pastikan `nameserver 10.91.3.2` dan `nameserver 10.91.3.3` muncul **secara otomatis**.
+    * Tes resolusi internal: `host pharazon.K55.com`.
+
+    ![Validasi resolv.conf Klien Dinamis (Khamul)](assets/4_bukti_nameserver_khamul.png)
+
+
+---
+
+## 📦 Soal 5: Menambahkan Record CNAME, PTR, dan TXT
+
+### **Soal 5: Penyampaian Ulang**
+> Untuk memudahkan, nama alias `www.K55.com` dibuat untuk peta utama `K55.com`. **Reverse PTR** juga dibuat agar lokasi Erendis dan Amdir dapat dilacak dari alamat fisik tanahnya. Erendis juga menambahkan pesan rahasia (**TXT record**) pada petanya: "Cincin Sauron" yang menunjuk ke lokasi Elros, dan "Aliansi Terakhir" yang menunjuk ke lokasi Pharazon. Pastikan Amdir juga mengetahui pesan rahasia ini.
+
+### **🎯 Maksud dari Soal No. 5**
+Soal ini meminta kita untuk menambahkan tiga jenis *record* DNS baru di server master (**Erendis**). Karena Amdir adalah *slave*, semua perubahan ini akan **otomatis tersalin** kepadanya.
+1.  **CNAME (Canonical Name)**: Ini adalah "nama panggilan" atau alias. Kita akan membuat `www.K55.com` sebagai alias yang akan menunjuk ke `K55.com`.
+2.  **PTR (Pointer Record)**: Ini adalah kebalikan dari *record A* (yang memetakan Nama ke IP). PTR memetakan **IP ke Nama**. Ini sering disebut *Reverse DNS* atau *reverse lookup*, dan berguna untuk "mencari tahu siapa pemilik" sebuah alamat IP.
+3.  **TXT (Text Record)**: Ini adalah *record* yang memungkinkan kita menyimpan teks biasa di dalam DNS untuk "pesan rahasia".
+
+### **🛠️ Cara Mengerjakan**
+Seluruh konfigurasi untuk soal ini hanya dilakukan di **Erendis (Master Server)**.
+1.  **Deklarasikan Reverse Zone**: Di file `/etc/bind/named.conf.local`, kita mendeklarasikan zona baru untuk *reverse lookup* jaringan `10.91.3.0/24`. Nama zona ini memiliki format khusus: `3.91.10.in-addr.arpa`.
+
+    ![Deklarasi Reverse Zone di Erendis](assets/5_reverse_zone_erendis.png)
+
+2.  **Buat Zone File**: Kita membuat file baru (`/etc/bind/jarkom/3.91.10.in-addr.arpa`) yang berisi pemetaan PTR untuk Erendis dan Amdir.
+3.  **Perbarui Zone File**: Kita mengedit file `K55.com` yang sudah ada untuk menambahkan *record* CNAME (`www`) dan dua *record* TXT.
+4.  **Restart BIND9**: Terapkan semua perubahan dengan me-restart *service* `named` di Erendis.
+
+    ![Pembuatan Reverse Zone File dan Penambahan CNAME/TXT](assets/5_reverse_lookup_erendis.png)
+
+### **✅ Cara Melakukan Validasi**
+Setelah menjalankan skrip di **Erendis**, kita bisa langsung melakukan validasi dari klien mana pun (misalnya, **Elendil** atau **Khamul**) yang sudah menggunakan Erendis/Amdir sebagai DNS servernya.
+
+1.  **Validasi CNAME**:
+    * Jalankan `host www.K55.com`.
+    * Hasil: `www.K55.com is an alias for K55.com.`
+2.  **Validasi PTR (Reverse Lookup)**:
+    * Jalankan `host 10.91.3.2`.
+    * Hasil: `2.3.91.10.in-addr.arpa domain name pointer ns1.K55.com.`
+3.  **Validasi TXT**:
+    * Jalankan `host -t TXT K55.com`.
+    * Hasil: Menampilkan kedua *record* TXT, "Cincin Sauron..." dan "Aliansi Terakhir...".
+
+Semua validasi ini berhasil dilakukan dari klien, yang membuktikan bahwa konfigurasi telah berhasil diterapkan dan disalin ke *slave*.
+
+![Validasi Lengkap dari Klien (Elendil)](assets/5_validasi_elendil.png)
