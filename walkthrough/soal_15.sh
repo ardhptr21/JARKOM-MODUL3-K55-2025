@@ -39,8 +39,7 @@ EOF
 
 cat <<EOF > /var/www/html/index.php
 <?php
-
-echo "Galadriel ";
-echo "Client IP Address: " . \$_SERVER['X-Real-IP'];
-
+echo "Hostname: " . gethostname() . "\n";
+echo "IP Address: " . \$_SERVER['HTTP_X_REAL_IP'] . "\n";
+?>
 EOF
