@@ -285,3 +285,34 @@ Seluruh konfigurasi untuk soal ini hanya dilakukan di **Aldarion (DHCP Server)**
 Hasil validasi di Amandil menunjukkan *lease time* yang benar, yaitu 1800 detik, yang membuktikan bahwa konfigurasi telah berhasil diterapkan.
 
 ![Validasi Lease Time di Amandil](assets/6_lease_time_amandil.png)
+
+---
+
+## 📦 Soal 7: Setup Worker Laravel (Elendil, Isildur, Anarion)
+
+### **Soal 7: Penyampaian Ulang**
+> Para Ksatria Númenor (Elendil, Isildur, Anarion) mulai membangun benteng pertahanan digital mereka menggunakan teknologi Laravel. Instal semua *tools* yang dibutuhkan (`php8.4`, `composer`, `nginx`) dan dapatkan cetak biru benteng dari `Resource-laravel` di setiap node *worker* Laravel. Cek dengan `lynx` di client.
+
+### **🎯 Maksud dari Soal No. 7**
+Tujuan dari soal ini adalah melakukan instalasi dan konfigurasi lengkap pada tiga node *worker* kita: **Elendil, Isildur, dan Anarion**. Masing-masing node ini akan disiapkan sebagai *server* web independen yang menjalankan aplikasi Laravel. Ini adalah langkah persiapan fondasi sebelum kita menghubungkan mereka ke *database* dan *load balancer* di soal-soal berikutnya.
+
+### **🛠️ Cara Mengerjakan**
+Proses ini diulangi di ketiga node *worker* (Elendil, Isildur, Anarion).
+1.  **Installasi Paket**: Pertama, kita menambahkan repositori `sury.org` untuk mendapatkan versi PHP yang spesifik. Kemudian, kita menginstall semua paket yang dibutuhkan, termasuk `nginx`, `git`, `composer`, dan `php8.4` beserta ekstensi-ekstensinya.
+2.  **Unduh Aplikasi Laravel**: Berpindah ke direktori `/var/www` dan menggunakan `git clone` untuk mengunduh kode aplikasi dari repositori `laravel-simple-rest-api`.
+3.  **Install Dependensi (Perbaikan)**:
+    * Saat menjalankan `composer install`, terjadi error karena `composer.lock` dari repositori tersebut meminta paket-paket lama yang tidak kompatibel dengan PHP 8.4.
+    * **Solusi**: Sebagai gantinya, kita menjalankan `composer update`. Perintah ini akan mengabaikan file `.lock` dan mengunduh versi terbaru dari semua paket yang kompatibel dengan PHP 8.4.
+4.  **Konfigurasi Dasar Laravel**: Menyalin file `.env.example` menjadi `.env` dan menjalankan `php artisan key:generate` untuk membuat kunci enkripsi aplikasi.
+5.  **Konfigurasi Nginx**: Membuat file konfigurasi *server block* baru di `/etc/nginx/sites-available/laravel`. Di dalam file ini, kita mengatur `root` ke direktori `.../public` aplikasi Laravel dan mengatur `listen` pada port yang unik untuk setiap *worker* (Elendil: 8001, Isildur: 8002, Anarion: 8003).
+6.  **Finalisasi**: Mengaktifkan situs Nginx yang baru dengan membuat *symlink* ke `sites-enabled` dan menghapus konfigurasi *default*. Izin akses folder `storage` juga diatur, lalu *service* `php8.4-fpm` dan `nginx` dijalankan.
+
+### **✅ Cara Melakukan Validasi**
+1.  **Install Lynx**: Di node klien (misalnya **Miriel**), install `lynx` untuk melakukan tes berbasis teks.
+2.  **Akses Setiap Worker**: Gunakan `lynx` untuk mengakses setiap *worker* melalui alamat IP dan port-nya masing-masing.
+    * `lynx http://10.91.1.2:8001` (Elendil)
+    * `lynx http://10.91.1.3:8002` (Isildur)
+    * `lynx http://10.91.1.4:8003` (Anarion)
+3.  **Periksa Hasil**: Validasi dianggap **berhasil** jika `lynx` menampilkan halaman selamat datang Laravel, bukan halaman error "500 Internal Server Error".
+
+    ![Validasi Berhasil di Isildur](assets/7_tes_laravel_isildur.png)
