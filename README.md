@@ -316,3 +316,192 @@ Proses ini diulangi di ketiga node *worker* (Elendil, Isildur, Anarion).
 3.  **Periksa Hasil**: Validasi dianggap **berhasil** jika `lynx` menampilkan halaman selamat datang Laravel, bukan halaman error "500 Internal Server Error".
 
     ![Validasi Berhasil di Isildur](assets/7_tes_laravel_isildur.png)
+
+
+---
+
+## 📦 Soal 8: Koneksi Database & Pembatasan Domain
+
+### **Soal 8: Penyampaian Ulang**
+> Setiap benteng Númenor harus terhubung ke sumber pengetahuan, **Palantir**. Konfigurasikan koneksi database di file **.env** masing-masing worker. Setiap benteng juga harus memiliki gerbang masuk yang unik; atur nginx agar **Elendil mendengarkan di port 8001, Isildur di 8002, dan Anarion di 8003**. Jangan lupa jalankan **migrasi dan seeding** awal dari **Elendil**. Buat agar akses web hanya bisa melalui **domain nama**, tidak bisa melalui ip.
+
+### **🎯 Maksud dari Soal No. 8**
+Tujuan dari soal ini adalah untuk "menghidupkan" aplikasi Laravel yang sudah kita install di Soal 7. Ini dilakukan dengan menghubungkan ketiga *worker* (Elendil, Isildur, Anarion) ke satu *database server* pusat, yaitu **Palantir**.
+
+Kita akan melakukan empat hal:
+1.  **Menyiapkan Database Pusat**: Mengkonfigurasi **Palantir** (MariaDB) agar siap menerima koneksi dari *worker*.
+2.  **Menghubungkan Worker**: Memberi tahu setiap *worker* (via file `.env`) alamat dan kredensial untuk mengakses *database* di Palantir.
+3.  **Inisialisasi Database**: Menjalankan *migrasi* (`php artisan migrate`) dari Elendil untuk membangun struktur tabel di Palantir dan *seeding* (`db:seed`) untuk mengisinya dengan data awal.
+4.  **Membatasi Akses**: Mengubah konfigurasi Nginx di setiap *worker* agar mereka **hanya merespon** jika diakses menggunakan nama domain (misal, `elendil.K55.com`) dan menolak akses via alamat IP (`10.91.1.2`).
+
+### **🛠️ Cara Mengerjakan**
+1.  **Konfigurasi Palantir (Database Server)**:
+    * Install `mariadb-server`.
+    * Membuat *database* baru (misal, `db_k55`) dan *user* (misal, `k55_user`) dengan hak akses penuh dari jaringan *worker*.
+    * **(Perbaikan Penting)** Mengedit file konfigurasi MariaDB (di `/etc/mysql/mariadb.conf.d/50-server.cnf`) untuk **mengomentari** baris `bind-address = 127.0.0.1`. Ini adalah langkah krusial agar server mau menerima koneksi dari alamat IP lain (Elendil, dkk.), tidak hanya dari `localhost`.
+    * Me-restart *service* `mariadb`.
+
+2.  **Konfigurasi Worker (Elendil, Isildur, & Anarion)**:
+    * Pada ketiga node, edit file `/var/www/laravel-simple-rest-api/.env`.
+    * Ubah nilai `DB_HOST`, `DB_DATABASE`, `DB_USERNAME`, dan `DB_PASSWORD` agar sesuai dengan yang dibuat di Palantir.
+
+3.  **Migrasi & Seeding (Hanya Elendil)**:
+    * Setelah Palantir siap dan `.env` di Elendil terkonfigurasi, kita masuk ke direktori aplikasi di **Elendil**.
+    * Menjalankan `php artisan migrate:fresh` untuk membuat semua tabel di *database* Palantir.
+    * Menjalankan `php artisan db:seed --class=AiringsTableSeeder` untuk mengisi data awal ke tabel `airings`.
+
+4.  **Konfigurasi Nginx (Domain Only)**:
+    * Di **Elendil**, edit `/etc/nginx/sites-available/laravel` dan ubah `server_name _;` menjadi `server_name elendil.K55.com;`.
+    * Di **Isildur**, lakukan hal yang sama, tetapi ubah menjadi `server_name isildur.K55.com;`.
+    * Di **Anarion**, lakukan hal yang sama, tetapi ubah menjadi `server_name anarion.K55.com;`.
+    * Restart `nginx` di ketiga *worker*.
+
+### **✅ Cara Melakukan Validasi**
+1.  **Validasi Database (di Palantir)**:
+    * Setelah *service* MariaDB di-restart, jalankan `netstat -tulpn | grep 3306`.
+    * Hasilnya harus menunjukkan bahwa *service* `mariadbd` mendengarkan di `0.0.0.0:3306` atau `:::3306`, bukan lagi `127.0.0.1:3306`. Ini membuktikan ia siap menerima koneksi jaringan.
+
+    ![Validasi Port MariaDB di Palantir](assets/8_mariaDB.png)
+
+2.  **Validasi Migrasi (di Elendil)**:
+    * Periksa output dari `php artisan migrate:fresh`. Perintah ini harus berjalan sukses dengan status `DONE` untuk setiap tabel dan tidak ada error `Connection refused`.
+
+    ![Validasi Migrasi Berhasil di Elendil](assets/8_migrasi.png)
+
+3.  **Validasi Akses Domain (di Klien)**:
+    * Buka klien (misal, **Miriel**).
+    * Jalankan `lynx http://elendil.K55.com:8001`.
+    * Tes ini harus **berhasil** dan menampilkan halaman Laravel, membuktikan Nginx merespon panggilan via domain.
+
+    ![Validasi Lynx via Domain Berhasil](assets/8_lynx_http_elendil_k55_com.png)
+
+4.  **Validasi Akses IP (di Klien)**:
+    * Dari klien yang sama, jalankan `lynx http://10.91.1.2:8001`.
+    * Tes ini seharusnya **GAGAL** (misal, menampilkan error 404), membuktikan Nginx sudah tidak merespon panggilan via IP.
+
+
+
+---
+
+## 📦 Soal 9: Validasi Worker Laravel dan Database
+
+### **Soal 9: Penyampaian Ulang**
+> Pastikan setiap benteng berfungsi secara mandiri. Dari dalam node client masing-masing, gunakan `lynx` untuk melihat halaman utama Laravel dan `curl /api/airing` untuk memastikan mereka bisa mengambil data dari Palantir.
+
+### **🎯 Maksud dari Soal No. 9**
+Soal ini adalah langkah pengujian akhir untuk memastikan bahwa semua konfigurasi dari Soal 7 dan 8 telah berhasil. Tujuannya adalah untuk memvalidasi dua hal dari perspektif klien:
+1.  **Fungsionalitas Web Server**: Membuktikan bahwa *worker* (Elendil, Isildur, Anarion) dapat diakses melalui nama domain dan port-nya masing-masing. Ini divalidasi menggunakan `lynx`.
+2.  **Konektivitas Database**: Membuktikan bahwa aplikasi Laravel di setiap *worker* dapat terhubung ke *database* **Palantir**, mengambil data yang telah di-*seed*, dan menampilkannya. Ini divalidasi menggunakan `curl` ke *endpoint* API (`/api/airing`).
+
+### **🛠️ Cara Mengerjakan**
+Semua langkah pengerjaan pada soal ini adalah perintah validasi yang dijalankan dari **node klien** (misalnya, **Miriel**).
+1.  **Siapkan Klien**: Pastikan node klien (Miriel) memiliki *tools* `lynx` dan `curl` yang sudah terinstall.
+2.  **Pastikan DNS Klien**: Pastikan file `/etc/resolv.conf` di Miriel sudah menunjuk ke server DNS Erendis (`10.91.3.2`) dan Amdir (`10.91.3.3`).
+3.  **Jalankan Tes `lynx`**: Jalankan `lynx -dump` ke halaman utama setiap *worker* (misal, `lynx -dump http://isildur.K55.com:8002`) untuk memeriksa apakah *web server* merespon.
+4.  **Jalankan Tes `curl`**: Jalankan `curl` ke *endpoint* `/api/airing` di setiap *worker* (misal, `curl http://isildur.K55.com:8002/api/airing`) untuk memeriksa apakah koneksi *database* berfungsi.
+
+### **✅ Cara Melakukan Validasi**
+1.  **Validasi Halaman Utama (`lynx`)**:
+    * Perintah `lynx -dump` ke setiap *worker* (Elendil, Isildur, Anarion) berhasil mengembalikan halaman selamat datang Laravel. Ini membuktikan Soal 7 (setup `nginx`/`php-fpm`) dan bagian pembatasan domain dari Soal 8 berhasil.
+
+    ![Validasi Lynx Berhasil di Isildur](assets/9_uji_lynx_isildur.png)
+
+2.  **Validasi API Database (`curl`)**:
+    * Perintah `curl` ke *endpoint* `/api/airing` di setiap *worker* berhasil mengembalikan data dalam format JSON yang diawali dengan `{"data":[{...` dan diakhiri `,"message":"succeed"}`.
+    * Ini adalah bukti mutlak bahwa Soal 8 (konfigurasi `.env`, `bind-address` di Palantir, dan proses `migrate:fresh --seed`) telah **berhasil dengan sukses**.
+
+    ![Validasi API (Database) Berhasil di Semua Worker](assets/9_uji_api_elendil_isildur_anarion.png)
+
+
+---
+
+## 📦 Soal 10: Konfigurasi Load Balancer (Elros)
+
+### **Soal 10: Penyampaian Ulang**
+> Pemimpin bijak Elros ditugaskan untuk mengkoordinasikan pertahanan Númenor. Konfigurasikan nginx di **Elros** untuk bertindak sebagai **reverse proxy**. Buat *upstream* bernama **kesatria_numenor** yang berisi alamat ketiga *worker* (Elendil, Isildur, Anarion). Atur agar semua permintaan yang datang ke domain **elros.K55.com** diteruskan secara merata menggunakan algoritma **Round Robin** ke *backend*.
+
+### **🎯 Maksud dari Soal No. 10**
+Tujuan dari soal ini adalah untuk menyiapkan **Load Balancer**. Node **Elros** akan bertindak sebagai "gerbang utama" atau *reverse proxy* untuk ketiga *worker* Laravel kita.
+
+Daripada klien harus mengingat tiga alamat port yang berbeda (8001, 8002, 8003), mereka sekarang hanya perlu mengakses satu alamat: `http://elros.K55.com`. Elros kemudian akan secara cerdas meneruskan permintaan tersebut ke salah satu dari tiga *worker* (Elendil, Isildur, atau Anarion) di belakangnya. Algoritma **Round Robin** (standar Nginx) akan memastikan beban didistribusikan secara bergantian ke setiap *worker*.
+
+### **🛠️ Cara Mengerjakan**
+Seluruh konfigurasi untuk soal ini hanya dilakukan di node **Elros**.
+1.  **Install Nginx**: Paket `nginx` diinstall pada node **Elros**.
+2.  **Buat Konfigurasi**: File konfigurasi baru dibuat di `/etc/nginx/sites-available/elros.K55.com`.
+3.  **Definisikan Upstream**: Di dalam file tersebut, sebuah blok `upstream kesatria_numenor` dibuat. Blok ini berisi daftar alamat IP dan port dari ketiga *worker* Laravel (Elendil, Isildur, dan Anarion).
+4.  **Konfigurasi Server Block**: Di file yang sama, sebuah `server` block dibuat yang `listen 80` dan merespon `server_name elros.K55.com`.
+5.  **Atur Proxy Pass**: `location /` utama dikonfigurasi dengan `proxy_pass http://kesatria_numenor;`. Ini adalah perintah yang memberitahu Nginx untuk meneruskan semua permintaan ke grup *upstream* yang telah didefinisikan.
+6.  **Atur Headers**: Perintah `proxy_set_header` ditambahkan untuk memastikan informasi klien (seperti IP asli) tetap diteruskan ke *worker*.
+7.  **Aktifkan Situs**: Konfigurasi baru diaktifkan dengan membuat *symlink* ke `sites-enabled` dan menghapus konfigurasi *default*.
+8.  **Restart Nginx**: *Service* `nginx` di Elros di-restart untuk menerapkan perubahan.
+
+![Konfigurasi Load Balancer di Elros](assets/10_load_balance_elros.png)
+
+### **✅ Cara Melakukan Validasi**
+1.  **Validasi Klien (Miriel)**:
+    * Dari node klien (Miriel), jalankan perintah `curl http://elros.K55.com/api/airing` beberapa kali.
+    * **Hasil**: Perintah ini **berhasil** dan mengembalikan data JSON. Ini membuktikan bahwa *load balancer* Elros berfungsi, menerima permintaan, dan berhasil meneruskannya ke *worker* yang sehat.
+
+    ![Validasi curl ke Elros (Load Balancer)](assets/10_curl_api_airing_4_kali.png)
+
+2.  **Pemeriksaan Log Worker (Troubleshooting)**:
+    * **Masalah Awal**: Saat memvalidasi, `tail /var/log/nginx/access.log` di **Elendil** menunjukkan error `500 Internal Server Error`. Ini menandakan *worker* Elendil gagal di-setup dengan benar.
+    * **Perbaikan**: Masalah ini diatasi dengan menjalankan ulang skrip perbaikan Soal 7 di Elendil (terutama `composer update` dan `php artisan key:generate`).
+
+3.  **Validasi Akhir (Pasca Perbaikan)**:
+    * Tes `curl http://elendil.K55.com:8001/api/airing` (langsung ke Elendil) kini **berhasil** mengembalikan JSON.
+    * Tes `tail /var/log/nginx/access.log` di Elendil, Isildur, dan Anarion setelah diakses menunjukkan log baru dengan status `200 OK`. Ini membuktikan bahwa ketiga *worker* sudah sehat dan *load balancer* Elros berfungsi penuh.
+
+    | Log Elendil (Awalnya Error 500) | Log Isildur (Sehat) | Log Anarion (Sehat) |
+    | :---: | :---: | :---: |
+    | ![Log Elendil Awal](assets/10_validasi_round_robin_di_elendil.png) | ![Log Isildur](assets/10_validasi_round_robin_di_isildur.png) | ![Log Anarion](assets/10_validasi_round_robin_di_anarion.png) |
+
+# 🚀 Laporan Praktikum Modul 3 - Jaringan Komputer (K55)
+
+Dokumen ini dibuat untuk memandu anggota kelompok dalam memahami alur pengerjaan, konsep setiap soal, dan cara melakukan validasi.
+
+---
+
+## 📦 Soal 11: Load Testing & Tuning (Elros)
+
+> **Catatan:** Langkah-langkah pada soal ini belum dieksekusi atau divalidasi.
+
+### **Soal 11: Penyampaian Ulang**
+> Musuh mencoba menguji kekuatan pertahanan Númenor. Dari node client, luncurkan serangan benchmark (`ab`) ke `elros.K55.com/api/airing/`:
+> * Serangan Awal: `-n 100 -c 10` (100 permintaan, 10 bersamaan).
+> * Serangan Penuh: `-n 2000 -c 100` (2000 permintaan, 100 bersamaan).
+> Pantau kondisi para *worker* dan periksa log Elros untuk melihat apakah ada *worker* yang kewalahan atau koneksi yang gagal.
+> Strategi Bertahan: Tambahkan `weight` dalam algoritma, kemudian catat apakah lebih baik atau tidak.
+
+### **🎯 Maksud dari Soal No. 11**
+Tujuan dari soal ini adalah untuk melakukan **Load Testing** (uji beban) dan **Tuning** (penyetelan) pada *load balancer* kita (Elros).
+1.   **Load Testing**: Kita akan menggunakan *tool* `ab` (Apache Benchmark) untuk mensimulasikan banyak klien yang mengakses Elros secara bersamaan. Tujuannya adalah untuk melihat seberapa baik sistem kita (Elros + 3 *worker*) menangani stres/beban tersebut.
+2.   **Monitoring**: Sambil tes berjalan, kita akan memantau penggunaan CPU di **Elendil, Isildur, dan Anarion** menggunakan `htop` untuk melihat bagaimana Elros membagi beban. Kita juga akan memeriksa log error di Elros jika ada permintaan yang gagal.
+3.  **Tuning (Strategi Bertahan)**: Setelah melihat hasil tes awal (Round Robin), kita akan memodifikasi algoritma *load balancing* di Elros.  Sesuai modul *Reverse Proxy* , kita akan menambahkan `weight` (beban). Tujuannya adalah untuk melihat bagaimana perubahan strategi ini mempengaruhi kinerja (apakah jumlah permintaan yang gagal berkurang atau tidak).
+
+### **🛠️ Cara Mengerjakan**
+1.   **Persiapan Klien (Miriel)**: Install `apache2-utils` (yang berisi *tool* `ab`) dan `htop` (untuk monitoring). 
+2.   **Persiapan Worker (Elendil, Isildur, Anarion)**: Install `htop` di ketiga *worker* agar kita bisa memantau CPU mereka.
+3.  **Jalankan Tes 1 (Serangan Awal)**:
+    * Buka 4 jendela terminal: 1 untuk Miriel, 1 untuk Elendil, 1 untuk Isildur, 1 untuk Anarion.
+    * Di 3 *worker*, jalankan `htop`.
+    * Di **Miriel**, jalankan perintah `ab -n 100 -c 10 http://elros.K55.com/api/airing/`.
+    * Amati `htop` di 3 *worker* untuk melihat beban terdistribusi (seharusnya merata).
+4.  **Jalankan Tes 2 (Serangan Penuh - Round Robin)**:
+    * Masih dengan `htop` berjalan di *worker*.
+    * Di **Miriel**, jalankan perintah `ab -n 2000 -c 100 http://elros.K55.com/api/airing/`.
+    * Amati `htop` lagi dan catat jumlah `Failed requests` di output `ab`.
+5.  **Terapkan Strategi Bertahan (Weight)**:
+    * Di **Elros**, edit file konfigurasi Nginx (`/etc/nginx/sites-available/elros.K55.com`).
+    *  Ubah blok `upstream` untuk menambahkan `weight` ke *server* (misal: `server 10.91.1.2:8001 weight=3;`). 
+    * Restart `nginx` di Elros.
+6.  **Jalankan Tes 3 (Uji Coba Weight)**:
+    * Jalankan lagi "Serangan Penuh" (`ab -n 2000 -c 100 ...`) di **Miriel**.
+    * Amati `htop` dan bandingkan jumlah `Failed requests` dengan Tes 2.
+
+### **✅ Cara Melakukan Validasi**
+1.  **Validasi Round Robin**: Selama Tes 2, `htop` di ketiga *worker* (Elendil, Isildur, Anarion) akan menunjukkan lonjakan penggunaan CPU yang relatif seimbang.
+2.  **Validasi Weight**: Selama Tes 3, `htop` akan menunjukkan penggunaan CPU yang **tidak seimbang**. *Worker* yang diberi `weight=3` akan menunjukkan CPU *load* yang jauh lebih tinggi daripada *worker* dengan `weight=1`. Ini membuktikan strategi *weight* berfungsi.
+3.  **Analisis Performa**: Bandingkan jumlah `Failed requests` dari output `ab` Tes 2 dengan Tes 3. Jika jumlah *fail* berkurang, maka strategi `weight` dianggap "lebih baik".
+4.  **Analisis Log**: Periksa file `/var/log/nginx/error.log` di **Elros**.  Jika ada banyak *Failed requests*, log ini akan menunjukkan penyebabnya (misal, `worker_connections are not enough` atau `connect() failed`).
