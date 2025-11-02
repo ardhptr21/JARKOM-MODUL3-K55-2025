@@ -22,6 +22,7 @@ Tujuan dari soal ini adalah untuk melakukan konfigurasi jaringan dasar pada semu
 
 Sebelumnya kita buat dahulu topologi yang diminta
 ![topologi](assets/1_topologi.png)
+> btw ini topologi di server ardhi, karena saat itu servernya down 😭
 
 Ini dicapai dengan dua aksi utama:
 1.  **Memberi Alamat IP**: Mengatur IP statis, *netmask*, dan *gateway* untuk setiap node.
