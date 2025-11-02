@@ -20,6 +20,9 @@
 ### Maksud dari Soal No. 1
 Tujuan dari soal ini adalah untuk melakukan konfigurasi jaringan dasar pada semua node agar bisa saling terhubung dan memiliki akses ke internet. Ini adalah langkah fondasi yang krusial agar kita bisa mengunduh dan menginstall paket-paket yang diperlukan di soal-soal berikutnya (seperti `bind9`, `nginx`, dll.).
 
+Sebelumnya kita buat dahulu topologi yang diminta
+![topologi](assets/1_topologi.png)
+
 Ini dicapai dengan dua aksi utama:
 1.  **Memberi Alamat IP**: Mengatur IP statis, *netmask*, dan *gateway* untuk setiap node.
 2.  **Memberi Akses Internet**: Mengkonfigurasi **Durin** sebagai gerbang NAT dan mengatur DNS *resolver* di semua node lain agar menunjuk ke *nameserver* GNS3 (`192.168.122.1`).
@@ -33,7 +36,10 @@ Ini dicapai dengan dua aksi utama:
 
 ### Cara Melakukan Validasi
 1.  **Tes Koneksi Internal**: Login ke salah satu node (misalnya **Durin**) dan lakukan `ping` ke alamat IP node di subnet lain (contoh: `ping 10.91.4.2` untuk Aldarion atau `ping 10.91.2.7` untuk Gilgalad). Jika ada balasan, routing internal melalui Durin berhasil.
+![durin](assets/1_durin.png)
+
 2.  **Tes Koneksi Internet**: Login ke node klien (misalnya **Elendil**), jalankan `source /root/.bashrc`. Perintah `ping google.com -c 2` yang ada di dalam skrip akan otomatis berjalan. Jika `ping` berhasil, ini membuktikan bahwa NAT di Durin dan DNS *resolver* di Elendil berfungsi dengan benar.
+![anarion](assets/1_anarion.png)
 
 
 ---
@@ -64,7 +70,10 @@ Tujuan dari soal ini adalah mengimplementasikan sistem pembagian alamat IP otoma
         * Menambahkan `range` IP yang sesuai untuk subnet "Keluarga Manusia" dan "Keluarga Peri".
         * Menambahkan `subnet` untuk jaringan `10.91.4.0/24` (tempat Aldarion berada) agar *service* bisa berjalan.
         * Menambahkan blok `host Khamul` untuk menetapkan *Fixed Address* berdasarkan MAC address `eth0` Khamul.
+    ![konfigurasi](assets/2_khamul_mac.png)
+
     * Restart *service* `isc-dhcp-server`.
+    ![konfigurasi](assets/2_konfig_DHCP_server_aldarion.png)
 
 2.  **Konfigurasi DHCP Relay (Durin)**:
     * Install paket `isc-dhcp-relay`.
@@ -76,6 +85,10 @@ Tujuan dari soal ini adalah mengimplementasikan sistem pembagian alamat IP otoma
 
 3.  **Konfigurasi Klien (Khamul, Amandil, Gilgalad)**:
     * Pada ketiga node ini, ubah file `/etc/network/interfaces` dari `inet static` menjadi `inet dhcp`.
+    ![konfigurasi](assets/2_bukti_ip_amandil.png)
+    ![konfigurasi](assets/2_bukti_ip_khamul.png)
+
+
 
 ### **✅ Cara Melakukan Validasi**
 1.  **Verifikasi Layanan**:
@@ -88,6 +101,8 @@ Tujuan dari soal ini adalah mengimplementasikan sistem pembagian alamat IP otoma
     * **Khamul** harus mendapatkan alamat `inet 10.91.3.95/24`.
     * **Amandil** harus mendapatkan alamat `inet` dari rentang `10.91.1.x` yang telah ditentukan.
     * **Gilgalad** harus mendapatkan alamat `inet` dari rentang `10.91.2.x` yang telah ditentukan.
+
+    ![ps aux](assets/2_ps_aux_durin_dhcp_relay.png)
 
 ---
 
@@ -457,9 +472,6 @@ Seluruh konfigurasi untuk soal ini hanya dilakukan di node **Elros**.
     | :---: | :---: | :---: |
     | ![Log Elendil Awal](assets/10_validasi_round_robin_di_elendil.png) | ![Log Isildur](assets/10_validasi_round_robin_di_isildur.png) | ![Log Anarion](assets/10_validasi_round_robin_di_anarion.png) |
 
-# 🚀 Laporan Praktikum Modul 3 - Jaringan Komputer (K55)
-
-Dokumen ini dibuat untuk memandu anggota kelompok dalam memahami alur pengerjaan, konsep setiap soal, dan cara melakukan validasi.
 
 ---
 
