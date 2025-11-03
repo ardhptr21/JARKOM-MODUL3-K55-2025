@@ -21,6 +21,11 @@
 
 Tujuan dari soal ini adalah untuk melakukan konfigurasi jaringan dasar pada semua node agar bisa saling terhubung dan memiliki akses ke internet. Ini adalah langkah fondasi yang krusial agar kita bisa mengunduh dan menginstall paket-paket yang diperlukan di soal-soal berikutnya (seperti `bind9`, `nginx`, dll.).
 
+Sebelumnya kita buat dahulu topologi yang diminta
+![topologi](assets/1_topologi.png)
+
+> btw ini topologi di server ardhi, karena saat itu servernya down 😭
+
 Ini dicapai dengan dua aksi utama:
 
 1.  **Memberi Alamat IP**: Mengatur IP statis, _netmask_, dan _gateway_ untuk setiap node.
@@ -37,7 +42,10 @@ Ini dicapai dengan dua aksi utama:
 ### Cara Melakukan Validasi
 
 1.  **Tes Koneksi Internal**: Login ke salah satu node (misalnya **Durin**) dan lakukan `ping` ke alamat IP node di subnet lain (contoh: `ping 10.91.4.2` untuk Aldarion atau `ping 10.91.2.7` untuk Gilgalad). Jika ada balasan, routing internal melalui Durin berhasil.
+    ![durin](assets/1_durin.png)
+
 2.  **Tes Koneksi Internet**: Login ke node klien (misalnya **Elendil**), jalankan `source /root/.bashrc`. Perintah `ping google.com -c 2` yang ada di dalam skrip akan otomatis berjalan. Jika `ping` berhasil, ini membuktikan bahwa NAT di Durin dan DNS _resolver_ di Elendil berfungsi dengan benar.
+    ![anarion](assets/1_anarion.png)
 
 ---
 
@@ -68,11 +76,15 @@ Tujuan dari soal ini adalah mengimplementasikan sistem pembagian alamat IP otoma
     - Install paket `isc-dhcp-server`.
     - Edit file `/etc/default/isc-dhcp-server` untuk menentukan `INTERFACESv4="eth0"`.
     - Edit file `/etc/dhcp/dhcpd.conf` untuk:
-      - Mendefinisikan `subnet` untuk setiap jaringan klien (`10.91.1.0/24`, `10.91.2.0/24`, `10.91.3.0/24`).
-      - Menambahkan `range` IP yang sesuai untuk subnet "Keluarga Manusia" dan "Keluarga Peri".
+      _ Mendefinisikan `subnet` untuk setiap jaringan klien (`10.91.1.0/24`, `10.91.2.0/24`, `10.91.3.0/24`).
+      _ Menambahkan `range` IP yang sesuai untuk subnet "Keluarga Manusia" dan "Keluarga Peri".
+
       - Menambahkan `subnet` untuk jaringan `10.91.4.0/24` (tempat Aldarion berada) agar _service_ bisa berjalan.
       - Menambahkan blok `host Khamul` untuk menetapkan _Fixed Address_ berdasarkan MAC address `eth0` Khamul.
+        ![konfigurasi](assets/2_khamul_mac.png)
+
     - Restart _service_ `isc-dhcp-server`.
+      ![konfigurasi](assets/2_konfig_DHCP_server_aldarion.png)
 
 2.  **Konfigurasi DHCP Relay (Durin)**:
 
@@ -85,6 +97,8 @@ Tujuan dari soal ini adalah mengimplementasikan sistem pembagian alamat IP otoma
 
 3.  **Konfigurasi Klien (Khamul, Amandil, Gilgalad)**:
     - Pada ketiga node ini, ubah file `/etc/network/interfaces` dari `inet static` menjadi `inet dhcp`.
+      ![konfigurasi](assets/2_bukti_ip_amandil.png)
+      ![konfigurasi](assets/2_bukti_ip_khamul.png)
 
 ### **✅ Cara Melakukan Validasi**
 
@@ -95,9 +109,12 @@ Tujuan dari soal ini adalah mengimplementasikan sistem pembagian alamat IP otoma
     - **Restart penuh** node **Khamul**, **Amandil**, dan **Gilgalad** satu per satu dari antarmuka GNS3 (**Stop**, lalu **Start**).
     - Buka konsol setiap klien tersebut dan jalankan `ip a`.
 3.  **Periksa Hasil**:
+
     - **Khamul** harus mendapatkan alamat `inet 10.91.3.95/24`.
     - **Amandil** harus mendapatkan alamat `inet` dari rentang `10.91.1.x` yang telah ditentukan.
     - **Gilgalad** harus mendapatkan alamat `inet` dari rentang `10.91.2.x` yang telah ditentukan.
+
+    ![ps aux](assets/2_ps_aux_durin_dhcp_relay.png)
 
 ---
 
@@ -526,10 +543,6 @@ Seluruh konfigurasi untuk soal ini hanya dilakukan di node **Elros**.
     | :----------------------------------------------------------------: | :-----------------------------------------------------------: | :-----------------------------------------------------------: |
     | ![Log Elendil Awal](assets/10_validasi_round_robin_di_elendil.png) | ![Log Isildur](assets/10_validasi_round_robin_di_isildur.png) | ![Log Anarion](assets/10_validasi_round_robin_di_anarion.png) |
 
-# 🚀 Laporan Praktikum Modul 3 - Jaringan Komputer (K55)
-
-Dokumen ini dibuat untuk memandu anggota kelompok dalam memahami alur pengerjaan, konsep setiap soal, dan cara melakukan validasi.
-
 ---
 
 ## 📦 Soal 11: Load Testing & Tuning (Elros)
@@ -714,14 +727,14 @@ htpasswd -bc /etc/nginx/.htpasswd noldor silvan
 
 Tambahkan konfigurasi berikut di file `/etc/nginx/sites-available/default`
 
-```nginx
+```conf
 auth_basic "Restricted";
 auth_basic_user_file /etc/nginx/.htpasswd;
 ```
 
 Contoh:
 
-```nginx
+```conf
 server {
     listen 8004;
     server_name galadriel.k55.com;
@@ -780,7 +793,7 @@ Lakukan konfigurasi untuk setiap node yang ada.
 
 Tambahkan konfigurasi berikut di file /etc/nginx/sites-available/default
 
-```nginx
+```conf
 map $http_x_real_ip $real_ip_or_remote {
     ""      $remote_addr;
     default $http_x_real_ip;
@@ -791,7 +804,7 @@ fastcgi_param HTTP_X_REAL_IP $real_ip_or_remote;
 
 Contoh:
 
-```nginx
+```conf
 # [Tambahan]
 map $http_x_real_ip $real_ip_or_remote {
     ""      $remote_addr;
