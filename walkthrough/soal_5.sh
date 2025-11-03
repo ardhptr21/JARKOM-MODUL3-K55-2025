@@ -39,3 +39,19 @@ EOF
 
 # 4. Restart service BIND9 untuk menerapkan semua perubahan
 service named restart
+
+# === Amdir (Slave) ====
+
+cat <<EOF | tee -a /etc/bind/named.conf.local
+zone "3.91.10.in-addr.arpa" {
+    type slave;
+    file "/var/lib/bind/3.91.10.in-addr.arpa";
+    masters { 10.91.3.2; };
+};
+EOF
+
+service named restart
+
+# check and test reverse lookup
+dig @10.91.3.2 -x 10.91.3.2
+dig @10.91.3.3 -x 10.91.3.3

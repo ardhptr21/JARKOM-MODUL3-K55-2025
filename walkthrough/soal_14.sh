@@ -31,13 +31,9 @@ server {
     }
 }
 
-server {
-  listen 8004 default_server;
-  server_name _;
-  return 444;
-}
-
 EOF
+
+service nginx restart
 
 curl -u noldor:silvan http://galadriel.k55.com:8004
 curl -u noldor:silvan http://celeborn.k55.com:800

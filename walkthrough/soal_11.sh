@@ -37,6 +37,9 @@ server {
     listen 80;
     server_name elros.K55.com;
 
+    access_log /var/log/nginx/elros_access.log;
+    error_log /var/log/nginx/elros_error.log;
+
     location / {
         proxy_pass http://kesatria_numenor;
         proxy_set_header Host \$host;

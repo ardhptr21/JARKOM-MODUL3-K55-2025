@@ -3,10 +3,15 @@ apt update
 apt install mariadb-server -y
 
 # ==== Palantir ====
-# [mysqld]
+# /etc/mysql/mariadb.conf.d/50-server.cnf
+# [mariadb]
 # server-id=1
-# log_bin=mysql-bin
+# log_bin=/var/log/mysql/mysql-bin.log
 # bind-address=0.0.0.0
+
+mkdir -p /var/log/mysql
+chown -R mysql:mysql /var/log/mysql
+chmod 750 /var/log/mysql
 
 service mariadb restart
 
@@ -20,19 +25,19 @@ SHOW MASTER STATUS;
 EOF
 
 # ==== Narvi ====
-# [mysqld]
+# [mariadb]
 # server-id=2
-# relay-log=relay-bin
+# relay-log=/var/log/mysql/relay-bin.log
 
 service mariadb restart
 
 mysql -u root <<EOF
 CHANGE MASTER TO
-  MASTER_HOST='palantir.k55.com',
+  MASTER_HOST='10.91.4.3',
   MASTER_USER='palantir',
   MASTER_PASSWORD='palantir123',
   MASTER_LOG_FILE='mysql-bin.000001',
-  MASTER_LOG_POS=120;
+  MASTER_LOG_POS=777;
 
 START SLAVE;
 

@@ -7,5 +7,5 @@
 # limit_req zone=limit_zone burst=20 nodelay;
 
 # Testing 
-ab -n 500 -c 50 http://pharazon.k55.com/
-ab -n 500 -c 50 http://elros.k55.com/
+ab -n 100 -c 50 http://pharazon.k55.com/
+ab -n 100 -c 50 http://elros.k55.com/api/airing/

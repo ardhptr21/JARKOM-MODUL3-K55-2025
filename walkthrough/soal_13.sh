@@ -30,17 +30,9 @@ server {
     }
 }
 
-server {
-  listen 8004 default_server;
-  server_name _;
-  return 444;
-}
-
 EOF
 
-service php8.4-fpm start
 service nginx restart
-
 
 curl http://galadriel.k55.com:8004
 curl http://celeborn.k55.com:8005

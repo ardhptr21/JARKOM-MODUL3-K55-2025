@@ -25,7 +25,7 @@ git clone https://github.com/elshiraphine/laravel-simple-rest-api.git
 cd laravel-simple-rest-api
 
 # Install semua dependensi PHP dengan Composer
-composer install
+composer install # atau composer update
 
 # Buat file environment dari contoh yang ada
 cp .env.example .env

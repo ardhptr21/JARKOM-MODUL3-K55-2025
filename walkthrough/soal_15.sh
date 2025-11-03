@@ -1,9 +1,19 @@
 # ==== Galadriel, Celeborn, Oropher ====
 
 # [!] Bisa tambahin ke setiap server confignya [!]
+# map $http_x_real_ip $real_ip_or_remote {
+#     ""      $remote_addr;
+#     default $http_x_real_ip;
+# }
 # fastcgi_param HTTP_X_REAL_IP $remote_addr;
 
 cat <<EOF > /etc/nginx/sites-available/default
+# [Tambahan]
+map $http_x_real_ip $real_ip_or_remote {
+    ""      $remote_addr;
+    default $http_x_real_ip;
+}
+
 server {
     listen 8004;
     server_name galadriel.k55.com;
@@ -17,7 +27,7 @@ server {
         try_files \$uri \$uri/ =404;
     }
 
-    location ~ \.php$ {
+    location ~ \.php\$ {
         include snippets/fastcgi-php.conf;
         fastcgi_pass unix:/var/run/php/php8.4-fpm.sock;
         fastcgi_param HTTP_X_REAL_IP \$remote_addr;               # <- [Tambahan]
@@ -26,12 +36,6 @@ server {
     location ~ /\.ht {
         deny all;
     }
-}
-
-server {
-  listen 8004 default_server;
-  server_name _;
-  return 444;
 }
 
 EOF

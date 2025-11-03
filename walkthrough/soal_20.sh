@@ -41,10 +41,6 @@ server {
     }
 }
 
-server {
-  listen 8004 default_server;
-  server_name _;
-  return 301 http://pharazon.k55.com\$request_uri;
-}
-
 EOF
+
+service nginx restart
