@@ -360,9 +360,13 @@ Proses ini diulangi di ketiga node _worker_ (Elendil, Isildur, Anarion).
 
 1.  **Installasi Paket**: Pertama, kita menambahkan repositori `sury.org` untuk mendapatkan versi PHP yang spesifik. Kemudian, kita menginstall semua paket yang dibutuhkan, termasuk `nginx`, `git`, `composer`, dan `php8.4` beserta ekstensi-ekstensinya.
 2.  **Unduh Aplikasi Laravel**: Berpindah ke direktori `/var/www` dan menggunakan `git clone` untuk mengunduh kode aplikasi dari repositori `laravel-simple-rest-api`.
+![install composer](assets/7_composer_install.png)
+
 3.  **Install Dependensi (Perbaikan)**:
     - Saat menjalankan `composer install`, terjadi error karena `composer.lock` dari repositori tersebut meminta paket-paket lama yang tidak kompatibel dengan PHP 8.4.
     - **Solusi**: Sebagai gantinya, kita menjalankan `composer update`. Perintah ini akan mengabaikan file `.lock` dan mengunduh versi terbaru dari semua paket yang kompatibel dengan PHP 8.4.
+![install composer](assets/7_composer_update.png)
+
 4.  **Konfigurasi Dasar Laravel**: Menyalin file `.env.example` menjadi `.env` dan menjalankan `php artisan key:generate` untuk membuat kunci enkripsi aplikasi.
 5.  **Konfigurasi Nginx**: Membuat file konfigurasi _server block_ baru di `/etc/nginx/sites-available/laravel`. Di dalam file ini, kita mengatur `root` ke direktori `.../public` aplikasi Laravel dan mengatur `listen` pada port yang unik untuk setiap _worker_ (Elendil: 8001, Isildur: 8002, Anarion: 8003).
 6.  **Finalisasi**: Mengaktifkan situs Nginx yang baru dengan membuat _symlink_ ke `sites-enabled` dan menghapus konfigurasi _default_. Izin akses folder `storage` juga diatur, lalu _service_ `php8.4-fpm` dan `nginx` dijalankan.
@@ -374,9 +378,10 @@ Proses ini diulangi di ketiga node _worker_ (Elendil, Isildur, Anarion).
     - `lynx http://10.91.1.2:8001` (Elendil)
     - `lynx http://10.91.1.3:8002` (Isildur)
     - `lynx http://10.91.1.4:8003` (Anarion)
+
 3.  **Periksa Hasil**: Validasi dianggap **berhasil** jika `lynx` menampilkan halaman selamat datang Laravel, bukan halaman error "500 Internal Server Error".
 
-    ![Validasi Berhasil di Isildur](assets/7_tes_laravel_isildur.png)
+![Validasi Berhasil di Isildur](assets/7_laravel.png)
 
 ---
 
