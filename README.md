@@ -21,10 +21,8 @@
 
 Tujuan dari soal ini adalah untuk melakukan konfigurasi jaringan dasar pada semua node agar bisa saling terhubung dan memiliki akses ke internet. Ini adalah langkah fondasi yang krusial agar kita bisa mengunduh dan menginstall paket-paket yang diperlukan di soal-soal berikutnya (seperti `bind9`, `nginx`, dll.).
 
-Sebelumnya kita buat dahulu topologi yang diminta
-![topologi](assets/1_topologi.png)
-
-> btw ini topologi di server ardhi, karena saat itu servernya down 😭
+Sebelumnya kita buat dahulu topologi yang diminta:
+![topologi](assets/1_Topologi_gns3.png)
 
 Ini dicapai dengan dua aksi utama:
 
@@ -579,6 +577,7 @@ Tujuan dari soal ini adalah untuk melakukan **Load Testing** (uji beban) dan **T
     - Masih dengan `htop` berjalan di _worker_.
     - Di **Miriel**, jalankan perintah `ab -n 2000 -c 100 http://elros.K55.com/api/airing/`.
     - Amati `htop` lagi dan catat jumlah `Failed requests` di output `ab`.
+
 5.  **Terapkan Strategi Bertahan (Weight)**:
     - Di **Elros**, edit file konfigurasi Nginx (`/etc/nginx/sites-available/elros.K55.com`).
     - Ubah blok `upstream` untuk menambahkan `weight` ke _server_ (misal: `server 10.91.1.2:8001 weight=3;`).
@@ -592,6 +591,12 @@ Tujuan dari soal ini adalah untuk melakukan **Load Testing** (uji beban) dan **T
 1.  **Validasi Round Robin**: Selama Tes 2, `htop` di ketiga _worker_ (Elendil, Isildur, Anarion) akan menunjukkan lonjakan penggunaan CPU yang relatif seimbang.
 2.  **Validasi Weight**: Selama Tes 3, `htop` akan menunjukkan penggunaan CPU yang **tidak seimbang**. _Worker_ yang diberi `weight=3` akan menunjukkan CPU _load_ yang jauh lebih tinggi daripada _worker_ dengan `weight=1`. Ini membuktikan strategi _weight_ berfungsi.
 3.  **Analisis Performa**: Bandingkan jumlah `Failed requests` dari output `ab` Tes 2 dengan Tes 3. Jika jumlah _fail_ berkurang, maka strategi `weight` dianggap "lebih baik".
+![serang 100 req](assets/11_100_request.png)
+![check htop](assets/11_check_htop_100%20req.png)
+![check 2000 req](assets/11_2000%20_request.png)
+![serang 100 req](assets/11_check_htop_2000.png)
+
+
 4.  **Analisis Log**: Periksa file `/var/log/nginx/error.log` di **Elros**. Jika ada banyak _Failed requests_, log ini akan menunjukkan penyebabnya (misal, `worker_connections are not enough` atau `connect() failed`).
 
 ## 📦 Soal 12: Instalasi Web Server (Galadriel, Celeborn, Oropher)
